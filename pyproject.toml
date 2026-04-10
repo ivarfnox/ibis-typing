@@ -1,0 +1,185 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ibis_typing"]
+
+[project]
+requires-python = ">=3.12"
+name = "ibis-typing"
+version = "1.0"
+description = "A typed framework for writing Ibis expressions with full IDE and static-analysis support"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "ibis-typing contributors"},
+]
+keywords = ["ibis", "typing", "dataframe", "duckdb", "trino", "type hints"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+
+# See https://docs.astral.sh/uv/guides/projects/#managing-dependencies
+dependencies = [
+    # Ibis tooling
+    "ibis-framework[duckdb,trino]>=9",
+    # Database connectors
+    "sqlglot>=25",
+    # Data frames
+    "pyarrow>=17",
+    # Serializing
+    "attrs>=24",
+    "cattrs>=24",
+    # Utilities
+    "more-itertools>=10",
+    "typing-extensions>=4",
+    # Visualisation (optional runtime utilities)
+    "hypothesis>=6",
+    "networkx>=3",
+    "matplotlib>=3",
+    "pydot>=4",
+    "graphviz>=0.21",
+    "humanize>=4",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=8",
+    "testcontainers>=4",
+]
+
+[project.urls]
+Homepage = "https://github.com/fortnox-finance/ibis-typing"
+Repository = "https://github.com/fortnox-finance/ibis-typing"
+Issues = "https://github.com/fortnox-finance/ibis-typing/issues"
+
+[dependency-groups]
+dev = [
+    # Dependency management
+    "deptry>=0.21",
+    "uv>=0.4",
+    # QA
+    "coverage>=7",
+    "ruff>=0.7",
+    "ty>=0.0.24",
+]
+
+[project.entry-points.pytest11]
+ibis-typing = "ibis_typing.fixtures.plugin"
+
+[tool.deptry]
+optional_dependencies_dev_groups = ["dev"]
+extend_exclude = [
+    "ibis_typing/type_patch",
+    "ibis_typing/fixtures",
+]
+
+[tool.deptry.per_rule_ignores]
+DEP002 = [# defined as a dependency but not used in the codebase
+    "pydot", # Required by networkx
+    "typing-extensions", # Useful for transient deprecation warnings
+]
+DEP004 = [# imported but declared as a dev dependency
+    "pytest",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --strict-markers"
+markers = """
+ibis: Ibis tests
+trino: Ibis Trino tests
+duck: Ibis DuckDB tests
+"""
+doctest_optionflags = ["ELLIPSIS"]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+]
+
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+exclude = ["ibis_typing/samples/generated/*"]
+extend-select = [
+    # pyflakes
+    "F",
+    # flake8-future-annotations
+    "FA",
+    # flake8-tidy-imports
+    "TID",
+    # flake8-commas
+    "COM",
+    # flake8-comprehensions
+    "C4",
+    # flake8-use-pathlib
+    "PTH",
+    # isort
+    "I",
+    # pylint Error
+    "PLE",
+    # pylint Refactor
+    "PLR",
+    # pylint Warning
+    "PLW",
+    # pycodestyle Error
+    "E",
+    # pycodestyle Warning
+    "W",
+    # pyupgrade
+    "UP",
+    # refurb
+    "FURB",
+    # ruff
+    "RUF",
+]
+ignore = [
+    # flake8-tidy-imports
+    "TID252", # Prefer absolute imports over relative imports from parent modules
+    # pycodestyle Error
+    "E501", # Line too long
+    # flake8-commas
+    # Conflicts with ruff formatter
+    "COM812", # Trailing comma missing
+    # pylint Refactor
+    "PLR2004", # Magic value used in comparison
+]
+
+[tool.ty.rules]
+unused-ignore-comment = "error"

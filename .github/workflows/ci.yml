@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Apply ibis type patches
+        run: uv run python -m ibis_typing.type_patch
+
+      - name: Lint
+        run: |
+          uv run ruff check
+          uv run ruff format --check
+          uv run ty check
+          uv run deptry .
+
+      - name: Unit tests
+        run: uv run coverage run -m pytest --exitfirst --durations=10 -m "not ibis"
+
+      - name: DuckDB integration tests
+        env:
+          TEST_IBIS_BACKEND: duck
+        run: uv run coverage run -m pytest --exitfirst --durations=10 -m "duck"
+
+      - name: Trino integration tests
+        env:
+          TEST_IBIS_BACKEND: trino
+        run: uv run coverage run -m pytest --exitfirst --durations=10 -m "trino"
+
+      - name: Type patcher tests
+        run: |
+          uv run coverage run -m ibis_typing.type_patch
+          uv run coverage run -m ibis_typing.ide.setup_ide
+
+      - name: Coverage report
+        run: |
+          uv run coverage combine
+          uv run coverage html
+          uv run coverage report --skip-covered --sort=cover --fail-under=90
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage_html_report/
