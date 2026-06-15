@@ -7,8 +7,6 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from .patchers import MethodOverloadPatcher
 
-notset = NOTSET
-
 
 def get_patchers():
     methods = [
@@ -26,14 +24,14 @@ class SetAttr(MonkeyPatch):  # type: ignore
         self,
         target: Any,
         name: object,
-        value: NotSetType = notset,
+        value: NotSetType = NOTSET,
         raising: bool = True,
     ) -> None: ...
     def setattr(
         self,
         target: str | object,
         name: object | str,
-        value: object = notset,
+        value: object = NOTSET,
         raising: bool = True,
     ) -> None: ...
 
@@ -43,12 +41,12 @@ class DelAttr(MonkeyPatch):  # type: ignore
     def delattr(  # type: ignore
         self,
         target: Any,
-        name: NotSetType = notset,
+        name: NotSetType = NOTSET,
         raising: bool = True,
     ) -> None: ...
     def delattr(
         self,
         target: object | str,
-        name: str | NotSetType = notset,
+        name: str | NotSetType = NOTSET,
         raising: bool = True,
     ) -> None: ...
